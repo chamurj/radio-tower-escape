@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Field Radio Unit — Repair Order 121.5 MHz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --olive: #4a5028;
+    --olive-dark: #33391c;
+    --olive-panel: #565c34;
+    --steel: #14150f;
+    --steel-hi: #23241a;
+    --khaki: #d9d3ab;
+    --khaki-dim: #a8a281;
+    --amber: #eea23c;
+    --danger: #9a3324;
+    --ok: #6f8f3e;
+    --rivet: #8a8a68;
+  }
+
+  *{box-sizing:border-box;}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important; transition-duration:0.001ms !important;}
+  }
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(ellipse at 30% 15%, var(--steel-hi), var(--steel) 75%);
+    font-family:'Courier Prime', monospace;
+    color:var(--khaki);
+    padding:40px 16px 80px;
+    display:flex;
+    justify-content:center;
+  }
+
+  .sheet{
+    position:relative;
+    width:100%;
+    max-width:700px;
+    background:
+      repeating-linear-gradient(115deg, rgba(0,0,0,0.05) 0 2px, transparent 2px 6px),
+      linear-gradient(160deg, var(--olive-panel), var(--olive) 55%, var(--olive-dark));
+    padding:46px 40px 40px;
+    border:1px solid #23260f;
+    border-radius:6px;
+    box-shadow:
+      inset 0 0 0 2px rgba(0,0,0,0.35),
+      0 30px 70px rgba(0,0,0,0.65);
+    animation: settle 0.5s ease-out;
+  }
+
+  .sheet::before, .sheet::after,
+  .rivet-tl, .rivet-tr, .rivet-bl, .rivet-br{
+    content:'';
+    position:absolute;
+    width:12px; height:12px;
+    border-radius:50%;
+    background: radial-gradient(circle at 35% 30%, #cfcba0, var(--rivet) 55%, #4a4a34 100%);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.6);
+  }
+  .sheet::before{ top:14px; left:14px; }
+  .sheet::after{ top:14px; right:14px; }
+  .rivet-bl{ position:absolute; bottom:14px; left:14px; }
+  .rivet-br{ position:absolute; bottom:14px; right:14px; }
+
+  @keyframes settle{
+    from{opacity:0; transform:translateY(14px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+
+  .hazard-bar{
+    height:8px;
+    margin:-46px -40px 26px;
+    background: repeating-linear-gradient(135deg, var(--amber) 0 14px, #1a1a12 14px 28px);
+    border-bottom:1px solid #23260f;
+  }
+
+  header{
+    text-align:center;
+    margin-bottom:34px;
+    border-bottom:2px solid var(--khaki-dim);
+    padding-bottom:16px;
+  }
+
+  h1{
+    font-family:'Black Ops One', sans-serif;
+    font-size:1.7rem;
+    margin:0 0 10px;
+    line-height:1.3;
+    letter-spacing:1px;
+    color:var(--khaki);
+    text-shadow: 0 2px 0 rgba(0,0,0,0.4);
+  }
+
+  .subtitle{
+    font-size:0.8rem;
+    letter-spacing:2px;
+    color:var(--khaki-dim);
+  }
+
+  .subtitle span{color:var(--amber); font-weight:700;}
+
+  /* progress rail */
+  .rail{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin:0 4px 32px;
+    position:relative;
+  }
+  .rail::before{
+    content:'';
+    position:absolute;
+    top:50%; left:20px; right:20px;
+    height:2px;
+    background-image: linear-gradient(90deg, var(--khaki-dim) 60%, transparent 0);
+    background-size: 10px 2px;
+    transform:translateY(-1px);
+    z-index:0;
+  }
+  .node{
+    position:relative; z-index:1;
+    width:38px; height:38px;
+    border-radius:50%;
+    border:2px solid var(--khaki-dim);
+    background:var(--steel);
+    color:var(--khaki-dim);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Black Ops One', sans-serif;
+    font-size:0.95rem;
+    transition: background 0.3s, border-color 0.3s, color 0.3s;
+  }
+  .node.complete{ background:var(--ok); border-color:var(--ok); color:var(--steel); }
+  .node.active{ border-color:var(--amber); color:var(--amber); box-shadow:0 0 0 4px rgba(238,162,60,0.18); }
+
+  /* stage cards */
+  .stage{
+    border:1px solid #23260f;
+    border-radius:4px;
+    margin-bottom:20px;
+    padding:16px 18px 20px;
+    position:relative;
+    background: linear-gradient(180deg, rgba(0,0,0,0.18), rgba(0,0,0,0.28));
+    box-shadow: inset 0 0 0 1px rgba(217,211,171,0.06);
+    transition: opacity 0.3s;
+  }
+  .stage.locked{ opacity:0.5; }
+  .stage.locked .puzzle-area{ pointer-events:none; filter:grayscale(0.5); }
+
+  .stage-head{
+    display:flex; justify-content:space-between; align-items:baseline;
+    margin-bottom:4px;
+  }
+  .stage-num{
+    font-size:0.68rem; letter-spacing:2px; color:var(--khaki-dim);
+  }
+  .stage-title{
+    font-family:'Black Ops One', sans-serif;
+    font-size:1.05rem;
+    letter-spacing:0.5px;
+    margin:6px 0 6px;
+    color:var(--khaki);
+  }
+  .status{
+    font-size:0.65rem; letter-spacing:1.5px;
+    padding:3px 8px; border:1px solid currentColor; border-radius:2px;
+    white-space:nowrap;
+  }
+  .status.locked-s{ color:var(--khaki-dim); }
+  .status.active-s{ color:var(--amber); }
+  .status.done-s{ color:var(--ok); }
+
+  .instructions{ font-size:0.8rem; line-height:1.5; margin:0 0 14px; color:var(--khaki-dim); }
+
+  .puzzle-area{ display:flex; flex-direction:column; gap:12px; }
+
+  button{
+    font-family:'Courier Prime', monospace;
+    cursor:pointer;
+    border:1.5px solid var(--khaki-dim);
+    background: linear-gradient(180deg, #3b4021, #2b2f18);
+    color:var(--khaki);
+    border-radius:3px;
+    transition: background 0.15s, transform 0.1s;
+  }
+  button:focus-visible{ outline:3px solid var(--amber); outline-offset:2px; }
+  button:active{ transform:translateY(1px); }
+
+  /* stage 1: wires */
+  .wire-grid{ display:flex; justify-content:space-between; gap:24px; }
+  .wire-col{ display:flex; flex-direction:column; gap:10px; flex:1; }
+  .wire-col-label{ font-size:0.62rem; letter-spacing:1.5px; color:var(--khaki-dim); margin-bottom:2px; }
+  .terminal{
+    padding:10px 8px; font-size:0.78rem; text-align:center; font-weight:700;
+  }
+  .terminal.matched{ background:var(--ok); color:var(--steel); border-color:var(--ok); cursor:default; }
+  .terminal.selected{ background:var(--amber); color:var(--steel); border-color:var(--amber); }
+  .terminal.wrong{ background:var(--danger); color:var(--khaki); border-color:var(--danger); }
+  @keyframes shake{ 0%,100%{transform:translateX(0);} 25%{transform:translateX(-4px);} 75%{transform:translateX(4px);} }
+  .shaking{ animation: shake 0.3s; }
+
+  /* stage 2: solar */
+  .panel-row{ display:flex; gap:12px; }
+  .panel{
+    flex:1; padding:20px 0; font-size:0.75rem; font-weight:700;
+  }
+  .panel.lit{ background:var(--amber); color:var(--steel); border-color:var(--amber); }
+  .panel.correct{ background:var(--ok); color:var(--steel); border-color:var(--ok); }
+  .panel-controls{ display:flex; gap:10px; align-items:center; }
+  .panel-controls button{ padding:8px 14px; font-size:0.75rem; }
+  .seq-feedback{ font-size:0.7rem; color:var(--khaki-dim); min-height:1.2em; }
+
+  /* stage 3: bolts */
+  .bolt-field{
+    position:relative; width:220px; height:220px; margin:6px auto 4px;
+  }
+  .bolt{
+    position:absolute; width:52px; height:52px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:0.85rem; font-weight:700;
+    transform:translate(-50%,-50%);
+  }
+  .bolt.tight{ background:var(--ok); color:var(--steel); border-color:var(--ok); }
+  .bolt.error{ background:var(--danger); color:var(--khaki); border-color:var(--danger); }
+  .hint{ font-size:0.68rem; color:var(--khaki-dim); text-align:center; }
+
+  /* stage 4: isotope riddle */
+  .isotope-row{ display:flex; gap:10px; }
+  #isotopeInput{
+    flex:1; padding:10px 12px; font-size:0.85rem; font-weight:700;
+    background:var(--steel); color:var(--amber);
+    border:1.5px solid var(--khaki-dim); border-radius:3px;
+    font-family:'Courier Prime', monospace; letter-spacing:1px;
+  }
+  #isotopeInput::placeholder{ color:var(--khaki-dim); opacity:0.6; }
+  #isotopeInput:focus-visible{ outline:3px solid var(--amber); outline-offset:2px; }
+  #isotopeInput.wrong{ border-color:var(--danger); }
+  #isotopeSubmit{ padding:8px 16px; font-size:0.75rem; letter-spacing:1px; }
+
+  /* stage 4: dial */
+  .dial-readout{
+    font-family:'Courier Prime', monospace; font-weight:700;
+    font-size:2.3rem; text-align:center; letter-spacing:2px;
+    border:1.5px solid #23260f; padding:10px 0; margin-bottom:6px;
+    background: var(--steel);
+    color:var(--amber);
+    text-shadow: 0 0 8px rgba(238,162,60,0.5);
+    box-shadow: inset 0 0 0 1px rgba(217,211,171,0.08);
+  }
+  .dial-readout .unit{ font-size:1rem; letter-spacing:1px; color:var(--khaki-dim); text-shadow:none; }
+  input[type="range"]{
+    width:100%; accent-color:var(--amber); margin:4px 0 10px;
+  }
+  .dial-marks{ display:flex; justify-content:space-between; font-size:0.6rem; color:var(--khaki-dim); margin-top:-6px; margin-bottom:10px; }
+  .transmit-btn{ align-self:center; padding:10px 26px; font-size:0.82rem; letter-spacing:1.5px; font-weight:700; }
+  .transmit-btn:hover{ background:var(--amber); color:var(--steel); border-color:var(--amber); }
+  .dial-feedback{ text-align:center; font-size:0.75rem; min-height:1.2em; color:var(--danger); }
+
+  /* win overlay */
+  .overlay{
+    position:fixed; inset:0; background:rgba(8,8,5,0.9);
+    display:none; align-items:center; justify-content:center; padding:20px; z-index:10;
+  }
+  .overlay.show{ display:flex; }
+  .win-card{
+    background: linear-gradient(160deg, var(--olive-panel), var(--olive-dark));
+    border:1px solid #23260f; padding:36px 30px;
+    max-width:420px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.7), inset 0 0 0 2px rgba(0,0,0,0.3);
+  }
+  .win-card h2{ font-family:'Black Ops One', sans-serif; font-size:1.5rem; margin:0 0 12px; color:var(--amber); letter-spacing:1px; }
+  .win-card p{ font-size:0.85rem; line-height:1.6; color:var(--khaki-dim); margin-bottom:20px; }
+  .win-card button{ padding:10px 22px; font-size:0.78rem; letter-spacing:1.5px; }
+
+  footer{ text-align:center; font-size:0.62rem; color:var(--khaki-dim); margin-top:8px; letter-spacing:1.5px; }
+</style>
+</head>
+<body>
+
+<div class="sheet">
+  <div class="hazard-bar"></div>
+  <div class="rivet-bl"></div>
+  <div class="rivet-br"></div>
+  <header>
+    <h1>FIELD RADIO UNIT — REPAIR ORDER</h1>
+  </header>
+
+  <div class="rail" id="rail">
+    <div class="node active" data-node="1">1</div>
+    <div class="node" data-node="2">2</div>
+    <div class="node" data-node="3">3</div>
+    <div class="node" data-node="4">4</div>
+    <div class="node" data-node="5">5</div>
+  </div>
+
+  <!-- STAGE 1: WIRES -->
+  <section class="stage" id="stage1">
+    <div class="stage-head">
+      <span class="stage-num">REPAIR 01</span>
+      <span class="status active-s" id="status1">IN PROGRESS</span>
+    </div>
+    <h3 class="stage-title">Antenna Feed Cable</h3>
+    <p class="instructions">The insulation failed and the feed lines got crossed. Select a source line, then its matching damaged end, to re-splice the cable.</p>
+    <div class="puzzle-area">
+      <div class="wire-grid">
+        <div class="wire-col" id="wireLeft">
+          <div class="wire-col-label">SOURCE</div>
+        </div>
+        <div class="wire-col" id="wireRight">
+          <div class="wire-col-label">DAMAGED END</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STAGE 2: SOLAR -->
+  <section class="stage locked" id="stage2">
+    <div class="stage-head">
+      <span class="stage-num">REPAIR 02</span>
+      <span class="status locked-s" id="status2">LOCKED</span>
+    </div>
+    <h3 class="stage-title">Solar Battery Array</h3>
+    <p class="instructions">The array charges one cell at a time. Watch the charge order light up, then tap the panels back in that same order.</p>
+    <div class="puzzle-area">
+      <div class="panel-row" id="panelRow">
+        <button class="panel" data-panel="0">A</button>
+        <button class="panel" data-panel="1">B</button>
+        <button class="panel" data-panel="2">C</button>
+        <button class="panel" data-panel="3">D</button>
+      </div>
+      <div class="panel-controls">
+        <button id="showSeqBtn">Show charge order</button>
+        <span class="seq-feedback" id="seqFeedback">Press to begin.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- STAGE 3: BOLTS -->
+  <section class="stage locked" id="stage3">
+    <div class="stage-head">
+      <span class="stage-num">REPAIR 03</span>
+      <span class="status locked-s" id="status3">LOCKED</span>
+    </div>
+    <h3 class="stage-title">Ladder Mounting Brackets</h3>
+    <p class="instructions">Loose brackets warp if tightened in a ring. Tighten the five bolts in a star pattern, crossing the circle each time.</p>
+    <div class="puzzle-area">
+      <div class="bolt-field" id="boltField"></div>
+      <div class="hint" id="boltFeedback">Tap bolt 1 to start the star pattern.</div>
+    </div>
+  </section>
+
+  <!-- STAGE 4: ISOTOPE RIDDLE -->
+  <section class="stage locked" id="stage4">
+    <div class="stage-head">
+      <span class="stage-num">REPAIR 04</span>
+      <span class="status locked-s" id="status4">LOCKED</span>
+    </div>
+    <h3 class="stage-title">Backup Power Cell</h3>
+    <p class="instructions">The mast's backup cell is seated in lutetium, element seventy-one. Nature leaves it exactly two isotopes: one immortal, one that decays across the age of galaxies. Take the mass number of the immortal isotope. Subtract from it the mass number of its decaying twin. Subtract that result from lutetium's atomic number. Enter the cell's charge as a positive whole number.</p>
+    <div class="puzzle-area">
+      <div class="isotope-row">
+        <input type="text" id="isotopeInput" inputmode="numeric" placeholder="CHARGE VALUE" autocomplete="off">
+        <button id="isotopeSubmit">Seat cell</button>
+      </div>
+      <div class="hint" id="isotopeFeedback">Reference: lutetium, Z = 71.</div>
+    </div>
+  </section>
+
+  <!-- STAGE 5: DIAL -->
+  <section class="stage locked" id="stage5">
+    <div class="stage-head">
+      <span class="stage-num">FINAL STEP</span>
+      <span class="status locked-s" id="status5">LOCKED</span>
+    </div>
+    <h3 class="stage-title">Tune &amp; Transmit</h3>
+    <p class="instructions">All repairs hold. Dial the transmitter to the known distress frequency and send the signal.</p>
+    <div class="puzzle-area">
+      <div class="dial-readout"><span id="dialValue">100.0</span> <span class="unit">MHz</span></div>
+      <input type="range" id="dialSlider" min="100" max="140" step="0.1" value="100">
+      <div class="dial-marks"><span>100</span><span>110</span><span>120</span><span>130</span><span>140</span></div>
+      <button class="transmit-btn" id="transmitBtn">Transmit</button>
+      <div class="dial-feedback" id="dialFeedback"></div>
+    </div>
+  </section>
+
+  <footer>BLUEPRINT REF. NO. 45M-VHF-121 &nbsp;·&nbsp; FIELD REPAIR LOG</footer>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="win-card">
+    <h2>TRANSMISSION CONFIRMED</h2>
+    <p>The needle holds steady on 121.5 MHz. Somewhere past the ridge, a receiver crackles to life. Rescue is inbound.</p>
+    <button id="resetBtn">Reset the log for the next crew</button>
+  </div>
+</div>
+
+<script>
+  // ---------- helpers ----------
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [a[i],a[j]]=[a[j],a[i]];
+    }
+    return a;
+  }
+  function setStageState(n, state){ // 'locked' | 'active' | 'done'
+    const stage = document.getElementById('stage'+n);
+    const status = document.getElementById('status'+n);
+    const node = document.querySelector('.node[data-node="'+n+'"]');
+    stage.classList.remove('locked');
+    node.classList.remove('active','complete');
+    if(state === 'locked'){
+      stage.classList.add('locked');
+      status.textContent = 'LOCKED'; status.className='status locked-s';
+    } else if(state === 'active'){
+      status.textContent = 'IN PROGRESS'; status.className='status active-s';
+      node.classList.add('active');
+    } else {
+      status.textContent = 'REPAIRED'; status.className='status done-s';
+      node.classList.add('complete');
+    }
+  }
+
+  // ---------- STAGE 1: wire splice ----------
+  const COLORS = [
+    {id:'red', label:'RED'},
+    {id:'blue', label:'BLUE'},
+    {id:'yellow', label:'YEL'},
+    {id:'green', label:'GRN'}
+  ];
+  const leftOrder = COLORS;
+  const rightOrder = shuffle(COLORS);
+  const leftCol = document.getElementById('wireLeft');
+  const rightCol = document.getElementById('wireRight');
+  let selectedLeft = null;
+  let matchedCount = 0;
+
+  leftOrder.forEach(c=>{
+    const b = document.createElement('button');
+    b.className = 'terminal';
+    b.textContent = c.label;
+    b.dataset.color = c.id;
+    b.dataset.side = 'left';
+    b.addEventListener('click', ()=>{
+      if(b.classList.contains('matched')) return;
+      document.querySelectorAll('.terminal[data-side="left"]').forEach(t=>t.classList.remove('selected'));
+      b.classList.add('selected');
+      selectedLeft = b;
+    });
+    leftCol.appendChild(b);
+  });
+
+  rightOrder.forEach(c=>{
+    const b = document.createElement('button');
+    b.className = 'terminal';
+    b.textContent = c.label;
+    b.dataset.color = c.id;
+    b.dataset.side = 'right';
+    b.addEventListener('click', ()=>{
+      if(b.classList.contains('matched') || !selectedLeft) return;
+      if(selectedLeft.dataset.color === b.dataset.color){
+        selectedLeft.classList.remove('selected');
+        selectedLeft.classList.add('matched');
+        b.classList.add('matched');
+        selectedLeft = null;
+        matchedCount++;
+        if(matchedCount === COLORS.length){
+          setStageState(1,'done');
+          setStageState(2,'active');
+        }
+      } else {
+        [selectedLeft, b].forEach(el=>{
+          el.classList.add('wrong','shaking');
+          setTimeout(()=>{ el.classList.remove('wrong','shaking'); }, 350);
+        });
+        selectedLeft.classList.remove('selected');
+        selectedLeft = null;
+      }
+    });
+    rightCol.appendChild(b);
+  });
+
+  // ---------- STAGE 2: solar simon sequence ----------
+  const sequence = [2,0,3,1];
+  let playerStep = 0;
+  let sequencePlaying = false;
+  const panels = Array.from(document.querySelectorAll('.panel'));
+  const seqFeedback = document.getElementById('seqFeedback');
+
+  document.getElementById('showSeqBtn').addEventListener('click', ()=>{
+    if(sequencePlaying) return;
+    sequencePlaying = true;
+    playerStep = 0;
+    seqFeedback.textContent = 'Watch the charge order…';
+    panels.forEach(p=>p.classList.remove('correct'));
+    let i = 0;
+    const interval = setInterval(()=>{
+      panels.forEach(p=>p.classList.remove('lit'));
+      if(i > 0) panels[sequence[i-1]].classList.remove('lit');
+      if(i < sequence.length){
+        panels[sequence[i]].classList.add('lit');
+        i++;
+      } else {
+        clearInterval(interval);
+        setTimeout(()=>{
+          panels.forEach(p=>p.classList.remove('lit'));
+          sequencePlaying = false;
+          seqFeedback.textContent = 'Now tap the panels in that order.';
+        }, 500);
+      }
+    }, 650);
+  });
+
+  panels.forEach(p=>{
+    p.addEventListener('click', ()=>{
+      if(sequencePlaying) return;
+      if(document.getElementById('stage2').classList.contains('locked')) return;
+      const idx = parseInt(p.dataset.panel,10);
+      if(idx === sequence[playerStep]){
+        p.classList.add('correct');
+        playerStep++;
+        if(playerStep === sequence.length){
+          seqFeedback.textContent = 'Array charged.';
+          setStageState(2,'done');
+          setStageState(3,'active');
+        }
+      } else {
+        panels.forEach(pn=>pn.classList.remove('correct'));
+        playerStep = 0;
+        seqFeedback.textContent = 'Order broken — press "Show charge order" and try again.';
+      }
+    });
+  });
+
+  // ---------- STAGE 3: bolt star pattern ----------
+  const boltField = document.getElementById('boltField');
+  const boltFeedback = document.getElementById('boltFeedback');
+  const starOrder = [1,3,5,2,4];
+  let boltStep = 0;
+  const radius = 90, cx = 110, cy = 110;
+  const boltPositions = {};
+  for(let i=1;i<=5;i++){
+    const angle = (Math.PI*2*(i-1)/5) - Math.PI/2;
+    boltPositions[i] = { x: cx + radius*Math.cos(angle), y: cy + radius*Math.sin(angle) };
+    const b = document.createElement('button');
+    b.className = 'bolt';
+    b.textContent = i;
+    b.style.left = boltPositions[i].x + 'px';
+    b.style.top = boltPositions[i].y + 'px';
+    b.dataset.bolt = i;
+    b.addEventListener('click', ()=>{
+      if(document.getElementById('stage3').classList.contains('locked')) return;
+      if(b.classList.contains('tight')) return;
+      if(parseInt(b.dataset.bolt,10) === starOrder[boltStep]){
+        b.classList.add('tight');
+        boltStep++;
+        if(boltStep === starOrder.length){
+          boltFeedback.textContent = 'All brackets torqued to spec.';
+          setStageState(3,'done');
+          setStageState(4,'active');
+        } else {
+          boltFeedback.textContent = 'Next: cross to bolt ' + starOrder[boltStep] + '.';
+        }
+      } else {
+        b.classList.add('error');
+        setTimeout(()=>b.classList.remove('error'), 350);
+        boltFeedback.textContent = 'Wrong bolt — tightening in a ring warps the plate. Start over from bolt ' + starOrder[0] + '.';
+        boltStep = 0;
+        document.querySelectorAll('.bolt').forEach(bl=>bl.classList.remove('tight'));
+      }
+    });
+    boltField.appendChild(b);
+  }
+
+  // ---------- STAGE 4: isotope riddle ----------
+  const ISOTOPE_ANSWER = 72; // Lu-175 (stable) - Lu-176 (radioactive) = -1; 71 - (-1) = 72
+  const isotopeInput = document.getElementById('isotopeInput');
+  const isotopeFeedback = document.getElementById('isotopeFeedback');
+
+  function submitIsotope(){
+    if(document.getElementById('stage4').classList.contains('locked')) return;
+    const raw = isotopeInput.value.trim();
+    const val = parseInt(raw, 10);
+    if(!isNaN(val) && val === ISOTOPE_ANSWER){
+      isotopeInput.classList.remove('wrong');
+      isotopeFeedback.textContent = 'Cell seated. Charge accepted.';
+      setStageState(4,'done');
+      setStageState(5,'active');
+    } else {
+      isotopeInput.classList.add('wrong');
+      isotopeFeedback.textContent = 'Cell rejects the charge — recheck the isotopes and the arithmetic.';
+      setTimeout(()=>isotopeInput.classList.remove('wrong'), 400);
+    }
+  }
+  document.getElementById('isotopeSubmit').addEventListener('click', submitIsotope);
+  isotopeInput.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter') submitIsotope();
+  });
+
+  // ---------- STAGE 5: dial ----------
+  const dialSlider = document.getElementById('dialSlider');
+  const dialValue = document.getElementById('dialValue');
+  const dialFeedback = document.getElementById('dialFeedback');
+  dialSlider.addEventListener('input', ()=>{
+    dialValue.textContent = parseFloat(dialSlider.value).toFixed(1);
+  });
+  document.getElementById('transmitBtn').addEventListener('click', ()=>{
+    if(document.getElementById('stage5').classList.contains('locked')) return;
+    const val = parseFloat(dialSlider.value);
+    if(Math.abs(val - 121.5) < 0.05){
+      setStageState(5,'done');
+      document.getElementById('overlay').classList.add('show');
+    } else {
+      dialFeedback.textContent = 'No signal — adjust the frequency and try again.';
+    }
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', ()=>{
+    window.location.reload();
+  });
+</script>
+</body>
+</html>
